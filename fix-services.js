@@ -4,7 +4,6 @@ const TOKEN      = '082bc36b-7b43-45cf-9f63-6a80d537d7c0';
 const PROJECT_ID = 'e1f97052-6256-4c2f-a123-023f98656a9f';
 const ENV_ID     = '2b382e1b-098c-4c0b-8953-bf48eb47d126';
 
-// Service IDs from the creation run
 const SERVICES = {
   application: '31568d2e-1325-43be-b062-c2c2e820f7d2',
   queue:       '8d4f3b22-79a0-4adf-852a-57d8ac4c6a3e',
@@ -26,15 +25,13 @@ function gql(query, variables = {}) {
       },
     }, (res) => {
       let data = '';
-      res.on('data', chunk => data += chunk);
+      res.on('data', c => data += c);
       res.on('end', () => {
         try {
-          const parsed = JSON.parse(data);
-          if (parsed.errors) {
-            console.error('  GQL error:', JSON.stringify(parsed.errors));
-            reject(new Error(parsed.errors[0].message));
-          } else resolve(parsed.data);
-        } catch (e) { reject(e); }
+          const p = JSON.parse(data);
+          if (p.errors) { console.error('  GQL:', JSON.stringify(p.errors)); reject(new Error(p.errors[0].message)); }
+          else resolve(p.data);
+        } catch(e) { reject(e); }
       });
     });
     req.on('error', reject);
@@ -43,20 +40,26 @@ function gql(query, variables = {}) {
   });
 }
 
-async function updateServiceInstance(serviceId, settings) {
+// Update instance settings (start command, root dir, restart policy)
+async function updateInstance(serviceId, input) {
   return gql(`
     mutation ServiceInstanceUpdate($serviceId: String!, $environmentId: String!, $input: ServiceInstanceUpdateInput!) {
       serviceInstanceUpdate(serviceId: $serviceId, environmentId: $environmentId, input: $input)
     }
-  `, {
-    serviceId,
-    environmentId: ENV_ID,
-    input: settings,
-  });
+  `, { serviceId, environmentId: ENV_ID, input });
+}
+
+// Update service-level source/build config (Dockerfile path, watch patterns)
+async function updateServiceSource(serviceId, input) {
+  return gql(`
+    mutation ServiceUpdate($id: String!, $input: ServiceUpdateInput!) {
+      serviceUpdate(id: $id, input: $input) { id name }
+    }
+  `, { id: serviceId, input });
 }
 
 async function redeploy(serviceId, name) {
-  process.stdout.write(`  → Triggering redeploy for "${name}"... `);
+  process.stdout.write(`  → Redeploying "${name}"... `);
   try {
     await gql(`
       mutation ServiceInstanceDeploy($serviceId: String!, $environmentId: String!) {
@@ -64,76 +67,67 @@ async function redeploy(serviceId, name) {
       }
     `, { serviceId, environmentId: ENV_ID });
     console.log('✅');
-  } catch(e) {
-    // Redeploy mutation name may differ — not fatal
-    console.log(`⚠️  (trigger manually in dashboard)`);
-  }
+  } catch(e) { console.log(`⚠️  ${e.message}`); }
 }
 
 async function main() {
-  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('  🔧  SupiCargo — Fixing Railway Service Configuration');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('  🔧  SupiCargo — Fixing Build Context & Docker Targets');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
   // ── application ─────────────────────────────────────────────────────────────
-  process.stdout.write('📦 Fixing "application" (root=api, start=bash deploy.sh)... ');
-  await updateServiceInstance(SERVICES.application, {
-    rootDirectory:  'api',
-    startCommand:   'bash deploy.sh',
+  process.stdout.write('📦 application (rootDir=repo root, start=octane)... ');
+  await updateInstance(SERVICES.application, {
+    rootDirectory: '',
+    startCommand: 'php artisan octane:frankenphp --max-requests=1000 --port=${PORT:-8000} --host=0.0.0.0',
     restartPolicyType: 'ON_FAILURE',
     restartPolicyMaxRetries: 5,
   });
   console.log('✅');
 
   // ── queue ────────────────────────────────────────────────────────────────────
-  process.stdout.write('📦 Fixing "queue" (root=api, start=queue:work)... ');
-  await updateServiceInstance(SERVICES.queue, {
-    rootDirectory: 'api',
-    startCommand:  'php artisan queue:work redis --sleep=3 --tries=3 --timeout=90 --max-time=3600',
+  process.stdout.write('📦 queue       (rootDir=repo root, start=queue:work)... ');
+  await updateInstance(SERVICES.queue, {
+    rootDirectory: '',
+    startCommand: 'php artisan queue:work redis --sleep=3 --tries=3 --timeout=90 --max-time=3600',
     restartPolicyType: 'ALWAYS',
   });
   console.log('✅');
 
   // ── scheduler ────────────────────────────────────────────────────────────────
-  process.stdout.write('📦 Fixing "scheduler" (root=api, start=schedule:work)... ');
-  await updateServiceInstance(SERVICES.scheduler, {
-    rootDirectory: 'api',
-    startCommand:  'php artisan schedule:work',
+  process.stdout.write('📦 scheduler   (rootDir=repo root, start=schedule:work)... ');
+  await updateInstance(SERVICES.scheduler, {
+    rootDirectory: '',
+    startCommand: 'php artisan schedule:work',
     restartPolicyType: 'ALWAYS',
   });
   console.log('✅');
 
-  // ── console ──────────────────────────────────────────────────────────────────
-  process.stdout.write('📦 Fixing "console" (root=console, Dockerfile)... ');
-  await updateServiceInstance(SERVICES.console, {
+  // ── console stays at rootDir=console ─────────────────────────────────────────
+  process.stdout.write('📦 console     (rootDir=console, nginx)... ');
+  await updateInstance(SERVICES.console, {
     rootDirectory: 'console',
-    startCommand:  "nginx -g 'daemon off;'",
+    startCommand: "nginx -g 'daemon off;'",
     restartPolicyType: 'ON_FAILURE',
     restartPolicyMaxRetries: 5,
   });
   console.log('✅');
 
-  // ── Trigger redeployments ────────────────────────────────────────────────────
+  // ── Trigger redeployments ─────────────────────────────────────────────────────
   console.log('\n🔄 Triggering redeployments...');
   await redeploy(SERVICES.application, 'application');
   await redeploy(SERVICES.queue,       'queue');
   await redeploy(SERVICES.scheduler,   'scheduler');
   await redeploy(SERVICES.console,     'console');
 
-  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('✅  All service configs updated!');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-  console.log('  Service configs applied:');
-  console.log('  application  →  rootDir=api  |  start: bash deploy.sh');
-  console.log('  queue        →  rootDir=api  |  start: php artisan queue:work');
-  console.log('  scheduler    →  rootDir=api  |  start: php artisan schedule:work');
-  console.log('  console      →  rootDir=console | start: nginx');
-  console.log('\n  Railway will now rebuild each service with the correct settings.');
-  console.log('  Watch progress at:');
-  console.log(`  https://railway.com/project/e1f97052-6256-4c2f-a123-023f98656a9f\n`);
+  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('✅  Done! Builds starting now (~8-10 min for PHP image).');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+  console.log('  The railway.toml at repo root tells Railway to use:');
+  console.log('  dockerfilePath = "docker/Dockerfile"');
+  console.log('  This gives the Dockerfile access to ./api/ and ./Caddyfile');
+  console.log('  and uses PHP 8.2 (frankenphp:1.12.4-php8.2-bookworm)\n');
+  console.log(`  Watch: https://railway.com/project/${PROJECT_ID}\n`);
 }
 
-main().catch(err => {
-  console.error('\n❌ Error:', err.message);
-  process.exit(1);
-});
+main().catch(err => { console.error('\n❌', err.message); process.exit(1); });
