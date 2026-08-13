@@ -1,0 +1,14 @@
+# Railway config for the API (application service)
+# This file lives at api/railway.toml
+# Railway reads it when Root Directory is set to "api"
+[build]
+builder = "dockerfile"
+# Path is relative to the repo ROOT (not the root directory setting)
+dockerfilePath = "docker/Dockerfile"
+
+[deploy]
+startCommand = "bash deploy.sh"
+healthcheckPath = "/api/v1/health-check"
+healthcheckTimeout = 120
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 5
