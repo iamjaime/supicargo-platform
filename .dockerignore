@@ -13,7 +13,6 @@ Vagrantfile
 concourse/
 infra/*
 vagrant/*
-docker/Dockerfile
 docker/database/
 deploy/*
 media/*
