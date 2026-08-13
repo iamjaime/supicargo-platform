@@ -1,0 +1,18 @@
+[deploy]
+# SocketCluster is deployed via Docker image (not GitHub repo)
+# Image: socketcluster/socketcluster:v17.4.0
+# This toml is for reference — set these values in the Railway dashboard
+# under the socket service → Settings → Deploy
+
+restartPolicyType = "always"
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+
+# ─── Environment Variables to set in Railway Dashboard ───────────────────────
+# SOCKETCLUSTER_WORKERS=2
+# SOCKETCLUSTER_BROKERS=1
+# SOCKETCLUSTER_OPTIONS={"origins":"https://<YOUR_CONSOLE_RAILWAY_URL>:*"}
+#
+# Note: SocketCluster uses port 8000 internally.
+# Railway will assign a public port automatically when you Generate Domain.
+# The internal service is reachable at: socket.railway.internal:8000

@@ -1,0 +1,9 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# Processes background jobs: webhooks, notifications, order events, etc.
+startCommand = "php artisan queue:work redis --sleep=3 --tries=3 --timeout=90 --max-jobs=500 --max-time=3600"
+restartPolicyType = "always"
+# No healthcheck needed — Railway monitors process uptime

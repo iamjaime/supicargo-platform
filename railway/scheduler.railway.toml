@@ -1,0 +1,9 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# Runs Laravel's built-in task scheduler (replaces go-crond for Railway)
+# This handles: cleanup jobs, status syncs, automated reports
+startCommand = "php artisan schedule:work"
+restartPolicyType = "always"
