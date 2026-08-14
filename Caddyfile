@@ -3,9 +3,12 @@
 		num_threads 24
 	}
 	order php_server before file_server
+	# Disable admin endpoint (not needed on Railway)
+	admin off
 }
 
-http://:8000 {
+# Listen on $PORT (Railway injects this dynamically, default 8000)
+http://:{$PORT:8000} {
 	root * /fleetbase/api/public
 	encode zstd br gzip
 	
