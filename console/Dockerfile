@@ -48,11 +48,11 @@ FROM nginx:alpine
 # Copy the built app to our served directory
 COPY --from=builder /console/dist /usr/share/nginx/html
 
-# Expose the port nginx is bound to
-EXPOSE 4200
+# Nginx listens on Railway's dynamic $PORT
+EXPOSE 8080
 
-# Use custom nginx.conf
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy nginx template (uses ${PORT} placeholder)
+COPY nginx.conf /etc/nginx/templates/default.conf.template
 
-# Start Nginx server
-CMD ["nginx", "-g", "daemon off;"]
+# envsubst replaces ${PORT} in the template at startup, then nginx starts
+CMD ["/bin/sh", "-c", "envsubst '${PORT}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
