@@ -113,6 +113,19 @@ COPY --chown=www-data:www-data ./api/composer.json ./api/composer.lock /fleetbas
 # Pre-install Composer dependencies
 RUN su www-data -s /bin/sh -c "composer install --no-scripts --optimize-autoloader --no-dev --no-cache"
 
+# Fix upstream bug in fleetbase/core-api: permissions migration uses ->uuid('id')->index()
+# which creates a NON-UNIQUE index. MySQL requires a UNIQUE index (or PRIMARY KEY) on the
+# referenced column for foreign key constraints. This causes SQLSTATE[HY000] error 6125
+# on every fresh migration. The correct fix is ->uuid('id')->primary().
+# Upstream bug: https://github.com/fleetbase/core-api (fix pending upstream)
+RUN MIGRATION="/fleetbase/api/vendor/fleetbase/core-api/migrations/2023_04_25_094304_create_permissions_table.php" && \
+    if [ -f "$MIGRATION" ]; then \
+        sed -i "s/->uuid('id')->index()/->uuid('id')->primary()/g" "$MIGRATION" && \
+        echo "✅ Patched core-api permissions migration: uuid('id')->index() → ->primary()"; \
+    else \
+        echo "⚠️  Migration file not found at $MIGRATION — skipping patch"; \
+    fi
+
 # Setup application
 COPY --chown=www-data:www-data ./api /fleetbase/api
 
