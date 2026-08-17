@@ -48,11 +48,18 @@ FROM nginx:alpine
 # Copy the built app to our served directory
 COPY --from=builder /console/dist /usr/share/nginx/html
 
+# Copy nginx config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
 # Nginx listens on Railway's dynamic $PORT
 EXPOSE 8080
 
-# Copy nginx template (uses ${PORT} placeholder)
-COPY nginx.conf /etc/nginx/templates/default.conf.template
-
-# envsubst replaces ${PORT} in the template at startup, then nginx starts
-CMD ["/bin/sh", "-c", "envsubst '${PORT}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+# At startup:
+# 1. Write fleetbase.config.json using the API_HOST env var (set in Railway Variables)
+# 2. Replace the PORT placeholder in the nginx config
+# 3. Start nginx
+CMD ["/bin/sh", "-c", "\
+  echo \"{\\\"API_HOST\\\":\\\"${API_HOST}\\\",\\\"SOCKETCLUSTER_HOST\\\":\\\"${SOCKETCLUSTER_HOST}\\\",\\\"SOCKETCLUSTER_PORT\\\":443,\\\"SOCKETCLUSTER_SECURE\\\":true}\" > /usr/share/nginx/html/fleetbase.config.json && \
+  sed -i \"s/\\${PORT}/${PORT:-80}/g\" /etc/nginx/conf.d/default.conf && \
+  nginx -g 'daemon off;' \
+"]
