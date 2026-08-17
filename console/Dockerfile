@@ -15,6 +15,26 @@ ARG ENVIRONMENT=production
 ARG DISABLE_FLEETBASE_ATTRIBUTION=false
 ENV DISABLE_FLEETBASE_ATTRIBUTION=$DISABLE_FLEETBASE_ATTRIBUTION
 
+# API configuration — baked into the Ember JS bundle at build time.
+# Railway passes service variables as build args when declared here.
+# See console/config/environment.js — getenv('API_HOST') reads process.env at build time.
+# DISABLE_RUNTIME_CONFIG defaults to true in production, so fleetbase.config.json is ignored;
+# the API URL must come from these build-time env vars instead.
+ARG API_HOST
+ARG API_SECURE=true
+ARG API_NAMESPACE=int/v1
+ARG SOCKETCLUSTER_HOST
+ARG SOCKETCLUSTER_PORT=443
+ARG SOCKETCLUSTER_SECURE=true
+ARG SOCKETCLUSTER_PATH=/socketcluster/
+ENV API_HOST=$API_HOST
+ENV API_SECURE=$API_SECURE
+ENV API_NAMESPACE=$API_NAMESPACE
+ENV SOCKETCLUSTER_HOST=$SOCKETCLUSTER_HOST
+ENV SOCKETCLUSTER_PORT=$SOCKETCLUSTER_PORT
+ENV SOCKETCLUSTER_SECURE=$SOCKETCLUSTER_SECURE
+ENV SOCKETCLUSTER_PATH=$SOCKETCLUSTER_PATH
+
 # Add the pnpm global bin to the PATH
 ENV PATH=/root/.pnpm/bin:$PATH
 
