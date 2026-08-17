@@ -39,4 +39,4 @@ php artisan fleetbase:notify-installed || true
 # Start Octane / FrankenPHP web server on Railway's dynamic PORT
 PORT="${PORT:-80}"
 echo "Starting Octane FrankenPHP on port $PORT..."
-exec php artisan octane:frankenphp --max-requests=1000 --port="${PORT}" --host=0.0.0.0
+exec php artisan octane:frankenphp --max-requests=1000 --port="${PORT}" --admin-port=2019 --host=0.0.0.0
