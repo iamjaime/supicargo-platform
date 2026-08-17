@@ -36,5 +36,7 @@ php artisan registry:init
 # Notify open install pages that setup has completed
 php artisan fleetbase:notify-installed || true
 
-# Start Octane / FrankenPHP web server
-exec php artisan octane:frankenphp --max-requests=1000 --port="${PORT:-8000}" --host=0.0.0.0
+# Start Octane / FrankenPHP web server on Railway's dynamic PORT
+PORT="${PORT:-80}"
+echo "Starting Octane FrankenPHP on port $PORT..."
+exec php artisan octane:frankenphp --max-requests=1000 --port="${PORT}" --host=0.0.0.0

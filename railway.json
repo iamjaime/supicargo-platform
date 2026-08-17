@@ -2,10 +2,10 @@
   "$schema": "https://railway.com/railway.schema.json",
   "build": {
     "builder": "DOCKERFILE",
-    "dockerfilePath": "Dockerfile"
+    "dockerfilePath": "docker/Dockerfile"
   },
   "deploy": {
-    "startCommand": "php artisan octane:frankenphp --max-requests=1000 --port=${PORT:-8000} --host=0.0.0.0",
+    "startCommand": "sh /fleetbase/api/deploy.sh",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 5
   }
