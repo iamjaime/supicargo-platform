@@ -1,40 +1,14 @@
 #!/bin/sh
 
-# Exit the script as soon as a command fails
-set -e
-
-# Create mysql databases if none exists
-php artisan mysql:createdb
-
-# Run migrations
-php artisan migrate --force
-
-# Run migrations for sandbox too
-php artisan sandbox:migrate --force
-
-# Seed database
-php artisan fleetbase:seed
-
-# Create permissions, policies, and roles
-php artisan fleetbase:create-permissions
-
-# Restart queue
-php artisan queue:restart
-
-# Sync scheduler
-php artisan schedule-monitor:sync
+# Run migrations if needed
+php artisan migrate --force || true
+php artisan sandbox:migrate --force || true
 
 # Clear all caches so dynamic routes and env vars resolve at runtime
-php artisan cache:clear
-php artisan route:clear
-php artisan config:clear
-php artisan view:clear
-
-# Initialize registry
-php artisan registry:init
-
-# Notify open install pages that setup has completed
-php artisan fleetbase:notify-installed || true
+php artisan cache:clear || true
+php artisan route:clear || true
+php artisan config:clear || true
+php artisan view:clear || true
 
 # Start Octane / FrankenPHP web server on Railway's dynamic PORT
 PORT="${PORT:-80}"
