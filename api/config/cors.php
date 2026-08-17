@@ -21,16 +21,23 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => array_filter(['http://localhost:4200', env('CONSOLE_HOST'), Utils::addWwwToUrl(env('CONSOLE_HOST')), ...Utils::arrayFrom(env('FRONTEND_HOSTS', ''))]),
+    'allowed_origins' => array_filter([
+        'http://localhost:4200',
+        env('CONSOLE_HOST'),
+        Utils::addWwwToUrl(env('CONSOLE_HOST')),
+        env('CORS_ALLOWED_ORIGINS'),
+        'https://console-production-0f5e.up.railway.app',
+        ...Utils::arrayFrom(env('FRONTEND_HOSTS', '')),
+        ...Utils::arrayFrom(env('CORS_ALLOWED_ORIGINS', ''))
+    ]),
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => ['*.railway.app', '*.up.railway.app', '*.railway.internal'],
 
     'allowed_headers' => ['*'],
 
     'exposed_headers' => ['x-compressed-json', 'access-console-sandbox', 'access-console-sandbox-key', 'content-disposition'],
 
-    'max_age' => 0,
+    'max_age' => 86400,
 
     'supports_credentials' => true,
-
 ];
