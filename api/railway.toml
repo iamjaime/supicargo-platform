@@ -8,7 +8,7 @@ dockerfilePath = "docker/Dockerfile"
 
 [deploy]
 startCommand = "bash deploy.sh"
-healthcheckPath = "/api/v1/health-check"
+healthcheckPath = "/health"
 healthcheckTimeout = 120
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 5
