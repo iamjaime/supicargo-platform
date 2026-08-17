@@ -24,13 +24,11 @@ php artisan queue:restart
 # Sync scheduler
 php artisan schedule-monitor:sync
 
-# Clear cache
+# Clear all caches so dynamic routes and env vars resolve at runtime
 php artisan cache:clear
 php artisan route:clear
-
-# Optimize
-php artisan config:cache
-php artisan route:cache
+php artisan config:clear
+php artisan view:clear
 
 # Initialize registry
 php artisan registry:init
