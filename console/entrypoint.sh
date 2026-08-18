@@ -2,18 +2,20 @@
 set -e
 
 PORT="${PORT:-80}"
-API_HOST="${API_HOST:-http://localhost:8000}"
-SOCKETCLUSTER_HOST="${SOCKETCLUSTER_HOST:-}"
+API_HOST="${API_HOST:-https://application-production-919c.up.railway.app}"
+SOCKETCLUSTER_HOST="${SOCKETCLUSTER_HOST:-console-production-0f5e.up.railway.app}"
+SOCKETCLUSTER_PATH="${SOCKETCLUSTER_PATH:-/socketcluster/}"
+SOCKETCLUSTER_PORT="${SOCKETCLUSTER_PORT:-443}"
+SOCKETCLUSTER_SECURE="${SOCKETCLUSTER_SECURE:-true}"
 
 echo "Starting Fleetbase Console..."
 echo "  API_HOST: ${API_HOST}"
 echo "  SOCKETCLUSTER_HOST: ${SOCKETCLUSTER_HOST}"
 echo "  PORT: ${PORT}"
 
-# Write the runtime config so the Ember app knows where the API lives.
-# This overwrites the localhost:8000 default that ships with the build.
+# Write the runtime config so the Ember app knows where the API and WebSocket live.
 cat > /usr/share/nginx/html/fleetbase.config.json << EOF
-{"API_HOST":"${API_HOST}","SOCKETCLUSTER_HOST":"${SOCKETCLUSTER_HOST}","SOCKETCLUSTER_PORT":443,"SOCKETCLUSTER_SECURE":true}
+{"API_HOST":"${API_HOST}","SOCKETCLUSTER_HOST":"${SOCKETCLUSTER_HOST}","SOCKETCLUSTER_PORT":${SOCKETCLUSTER_PORT},"SOCKETCLUSTER_SECURE":${SOCKETCLUSTER_SECURE},"SOCKETCLUSTER_PATH":"${SOCKETCLUSTER_PATH}"}
 EOF
 
 echo "  Config written: $(cat /usr/share/nginx/html/fleetbase.config.json)"
