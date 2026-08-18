@@ -108,14 +108,28 @@ export default class ApplicationRoute extends Route {
     }
 
     /**
-     * Initializes the application's locale settings based on the current user's preferences.
+     * Initializes the application's locale settings based on user preferences, browser locale, or Colombia Spanish default.
      *
-     * This method retrieves the user's preferred locale using the `getOption` method from the `currentUser` service.
-     * If no locale is set by the user, it defaults to `'en-US'`. It then sets the application's locale by calling
-     * the `setLocale` method of the `intl` service with the retrieved locale.
+     * This method retrieves the user's preferred locale or local storage preference.
+     * If no explicit locale is set, it checks browser language or defaults to 'es-CO' with 'es-ES' and 'en-US' fallbacks.
      */
     initializeLocale() {
-        const locale = this.currentUser.getOption('locale', 'en-US');
-        this.intl.setLocale([locale]);
+        const browserLang = typeof navigator !== 'undefined' && navigator.language ? navigator.language.toLowerCase() : null;
+        let defaultLocale = 'es-CO';
+
+        if (browserLang && browserLang.startsWith('en')) {
+            defaultLocale = 'en-US';
+        } else if (browserLang && (browserLang === 'es-mx' || browserLang.startsWith('es-m'))) {
+            defaultLocale = 'es-MX';
+        } else if (browserLang && (browserLang === 'es-es' || browserLang.startsWith('es-e'))) {
+            defaultLocale = 'es-ES';
+        }
+
+        const locale = this.currentUser?.getOption?.('locale') || (typeof localStorage !== 'undefined' && localStorage.getItem('locale')) || defaultLocale;
+        const availableLocales = ['es-co', 'es-es', 'es-mx', 'en-us'];
+        const normalizedLocale = (locale || 'es-co').toLowerCase();
+        const activeLocale = availableLocales.includes(normalizedLocale) ? normalizedLocale : 'es-co';
+
+        this.intl.setLocale([activeLocale, 'es-es', 'en-us']);
     }
 }

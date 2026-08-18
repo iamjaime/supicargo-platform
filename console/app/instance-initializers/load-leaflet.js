@@ -2,6 +2,9 @@ export function initialize(application) {
     const leafletService = application.lookup('service:leaflet');
     if (leafletService) {
         leafletService.load({
+            defaultLatitude: 4.710989,
+            defaultLongitude: -74.072092,
+            defaultZoom: 12,
             onReady: function (L) {
                 // This will prevent the awkward scroll bug produced by Chrome browsers
                 // https://github.com/Leaflet/Leaflet/issues/4125#issuecomment-356289643

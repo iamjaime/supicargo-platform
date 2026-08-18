@@ -37,6 +37,12 @@ module.exports = function (environment) {
             servers: {},
         },
 
+        map: {
+            defaultCenter: [parseFloat(getenv('DEFAULT_MAP_LAT', 4.710989)), parseFloat(getenv('DEFAULT_MAP_LNG', -74.072092))],
+            defaultZoom: parseInt(getenv('DEFAULT_MAP_ZOOM', 12)),
+            countryCode: getenv('DEFAULT_COUNTRY', 'CO'),
+        },
+
         socket: {
             path: getenv('SOCKETCLUSTER_PATH', '/socketcluster/'),
             hostname: getenv('SOCKETCLUSTER_HOST'),

@@ -51,7 +51,8 @@ return [
     ],
 
     'google_maps' => [
-        'locale' => env('GOOGLE_MAPS_LOCALE', 'us'),
+        'locale' => env('GOOGLE_MAPS_LOCALE', 'es'),
+        'region' => env('GOOGLE_MAPS_REGION', 'co'),
         'api_key' => env('GOOGLE_MAPS_API_KEY'),
     ]
 ];
